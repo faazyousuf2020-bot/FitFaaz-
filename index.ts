@@ -1,8 +1,8 @@
-import { registerRootComponent } from 'expo';
+import { registerRootComponent } from "expo";
 
-import App from './App';
+// Registers the background GPS task before anything else runs (needed when Android wakes the app for location updates).
+import "./src/lib/walkTracker";
+import "./src/lib/reminders";
+import App from "./App";
 
-// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
-// It also ensures that whether you load the app in Expo Go or in a native build,
-// the environment is set up appropriately
 registerRootComponent(App);
