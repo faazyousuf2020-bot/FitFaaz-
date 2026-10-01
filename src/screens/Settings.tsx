@@ -103,7 +103,7 @@ export default function Settings({ visible, onClose }: { visible: boolean; onClo
             { text: "Delete all", style: "destructive", onPress: () => { wipeAll(); st.reload(); toast("All data deleted"); onClose(); } },
           ])} />
       </View>
-      <Note style={{ marginTop: 22 }}>FitFaaz · map tiles © OpenStreetMap contributors © CARTO · food search by Open Food Facts</Note>
+      <Note style={{ marginTop: 22 }}>FitFaaz · map data © OpenStreetMap contributors · food search by Open Food Facts</Note>
     </Sheet>
   );
 }

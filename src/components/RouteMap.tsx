@@ -14,10 +14,18 @@ html,body,#m{height:100%;margin:0;background:#DCE6D8}
 <script>${LEAFLET_JS}</script>
 <script>
 var map = L.map('m', { zoomControl: false, attributionControl: true }).setView([11.0168, 76.9558], 15);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-  maxZoom: 19, subdomains: 'abcd',
-  attribution: '&copy; OpenStreetMap &copy; CARTO'
-}).addTo(map);
+var osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
+});
+var esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+  maxZoom: 19, attribution: '&copy; Esri, OpenStreetMap contributors'
+});
+var tileErrors = 0;
+osm.on('tileerror', function(){
+  tileErrors++;
+  if (tileErrors === 3) { map.removeLayer(osm); esri.addTo(map); }
+});
+osm.addTo(map);
 var line = L.polyline([], { color: '#3F7A56', weight: 5, lineCap: 'round', lineJoin: 'round' }).addTo(map);
 var start = null, cur = null, halo = null, userMoved = false, lastN = 0;
 map.on('dragstart', function(){ userMoved = true; });
