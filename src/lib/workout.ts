@@ -7,14 +7,18 @@ const DUR: Record<string, number> = {
   h: 3600, hr: 3600, hrs: 3600, hour: 3600, hours: 3600,
 };
 const durRe = new RegExp(`(\\d+(?:\\.\\d+)?)\\s*(${Object.keys(DUR).sort((a, b) => b.length - a.length).join("|")})\\b`);
-export const exKey = (n: string) => n.toLowerCase().replace(/[\s\-_]/g, "").replace(/s$/, "");
+import { exKey } from "./categories";
+export { exKey };
 export const isWalk = (n: string) => exKey(n).startsWith("walk");
 
 export function parseWo(text: string, known: string[]): Exercise {
   let t = " " + text.toLowerCase().trim() + " ";
   let sets = 0, reps = 0, dur = 0, kg = 0;
   let m: RegExpMatchArray | null;
-  if ((m = t.match(/(\d+)\s*[x×*]\s*(\d+)/))) { sets = +m[1]; reps = +m[2]; t = t.replace(m[0], " "); }
+  // "plank 3x60s" = 3 sets of 60 seconds
+  if ((m = t.match(/(\d+)\s*[x×*]\s*(\d+(?:\.\d+)?)\s*(s|sec|secs|seconds|m|min|mins|minutes)\b/))) {
+    sets = +m[1]; dur = +m[2] * DUR[m[3]]; t = t.replace(m[0], " ");
+  } else if ((m = t.match(/(\d+)\s*[x×*]\s*(\d+)/))) { sets = +m[1]; reps = +m[2]; t = t.replace(m[0], " "); }
   if ((m = t.match(/(\d+(?:\.\d+)?)\s*kgs?\b/))) { kg = +m[1]; t = t.replace(m[0], " "); }
   while ((m = t.match(durRe))) { dur += +m[1] * DUR[m[2]]; t = t.replace(m[0], " "); }
   if (!reps && (m = t.match(/\b(\d+)\s*(?:reps?)?\b/))) { sets = 1; reps = +m[1]; t = t.replace(m[0], " "); }
@@ -30,7 +34,7 @@ export const woDesc = (w: Exercise) =>
   [
     w.reps ? (w.sets > 1 ? `${w.sets}×${w.reps}` : `${w.reps} reps`) : "",
     w.kg ? `${w.kg} kg` : "",
-    w.dur ? fmtDur(w.dur) : "",
+    w.dur ? (!w.reps && w.sets > 1 ? `${w.sets}×${fmtDur(w.dur)}` : fmtDur(w.dur)) : "",
   ].filter(Boolean);
 
 export type Metric = { label: string; get: (r: Workout) => number; show: (v: number) => string; fmt: (v: number) => string };
@@ -38,7 +42,7 @@ export function exMetric(rows: Workout[]): Metric {
   const weighted = rows.some((r) => r.kg), timed = rows.every((r) => !r.reps && r.dur);
   const short = (v: number) => (v >= 1000 ? (v / 1000).toFixed(1) + "k" : String(Math.round(v)));
   if (weighted) return { label: "Volume (reps × kg)", get: (r) => r.sets * r.reps * (r.kg || 1), show: (v) => `${n0(v)} kg lifted`, fmt: short };
-  if (timed) return { label: "Time held", get: (r) => r.dur, show: (v) => fmtDur(v), fmt: (v) => `${Math.round(v)}s` };
+  if (timed) return { label: "Time held", get: (r) => r.dur * Math.max(1, r.sets), show: (v) => fmtDur(v), fmt: (v) => `${Math.round(v)}s` };
   return { label: "Total reps per session", get: (r) => r.sets * r.reps, show: (v) => `${n0(v)} reps`, fmt: short };
 }
 
@@ -64,7 +68,7 @@ export function planStatus(
   } else {
     const rows = workouts.filter((w) => w.date === date && exKey(w.name) === exKey(item.name));
     if (item.reps) { target = item.sets * item.reps; actual = sum(rows, (r) => r.sets * r.reps); }
-    else { target = item.dur; actual = sum(rows, (r) => r.dur); }
+    else { target = item.dur * Math.max(1, item.sets); actual = sum(rows, (r) => r.dur * Math.max(1, r.sets)); }
   }
   if (actual >= target) return "done";
   if (actual > 0) return "part";

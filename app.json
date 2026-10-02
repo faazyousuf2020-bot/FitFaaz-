@@ -29,7 +29,9 @@
         "android.permission.FOREGROUND_SERVICE_LOCATION",
         "android.permission.ACTIVITY_RECOGNITION",
         "android.permission.POST_NOTIFICATIONS",
-        "android.permission.INTERNET"
+        "android.permission.INTERNET",
+        "android.permission.CAMERA",
+        "android.permission.VIBRATE"
       ],
       "blockedPermissions": [
         "android.permission.ACCESS_BACKGROUND_LOCATION",
@@ -78,7 +80,14 @@
       "expo-sharing",
       "expo-task-manager",
       "expo-sensors",
-      "expo-build-properties"
+      "expo-build-properties",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "FitFaaz uses the camera to scan barcodes on food packets.",
+          "recordAudioAndroid": false
+        }
+      ]
     ]
   }
 }

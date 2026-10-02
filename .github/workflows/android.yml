@@ -39,6 +39,9 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
 
+      - name: Food calculation tests
+        run: npm test
+
       - name: Generate Android project
         run: npx expo prebuild --platform android --no-install --clean
 

@@ -20,7 +20,7 @@ export function usePlanStatus() {
   return (date: string, item: PlanItem) => planStatus(date, item, st.todayISO, st.walks, st.workouts, live);
 }
 
-export function PlanRow({ item, withLog, onGoWalk }: { item: PlanItem; withLog: boolean; onGoWalk?: () => void }) {
+export function PlanRow({ item, withLog, onGoWalk, onLongPress }: { item: PlanItem; withLog: boolean; onGoWalk?: () => void; onLongPress?: () => void }) {
   const st = useStore(), toast = useToast(), status = usePlanStatus()(item.date, item);
   const S = ST[status];
   const isToday = item.date === st.todayISO;
@@ -28,6 +28,7 @@ export function PlanRow({ item, withLog, onGoWalk }: { item: PlanItem; withLog: 
   const canWalk = withLog && isToday && status !== "done" && isWalk(item.name);
   return (
     <Row
+      onLongPress={onLongPress}
       left={
         <View style={{ width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: S.bg, borderWidth: S.border ? 1.5 : 0, borderColor: S.border }}>
           <T w="bold" size={12} c={S.fg}>{S.mark}</T>

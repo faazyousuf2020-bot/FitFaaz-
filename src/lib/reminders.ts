@@ -55,3 +55,27 @@ export async function applyReminders(r: Reminders): Promise<string | null> {
   }
   return null;
 }
+
+/* ---------- rest alert during a workout ---------- */
+let restId: string | null = null;
+export async function scheduleRestAlert(secs: number, exercise: string) {
+  await cancelRestAlert();
+  try {
+    if (Platform.OS === "android") {
+      await Notifications.setNotificationChannelAsync("rest", {
+        name: "Rest timer", importance: Notifications.AndroidImportance.HIGH, vibrationPattern: [0, 400, 200, 400],
+      });
+    }
+    const perm = await Notifications.getPermissionsAsync();
+    if (!perm.granted) return;
+    restId = await Notifications.scheduleNotificationAsync({
+      content: { title: "Rest over", body: `Time for your next set of ${exercise}.` },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: Math.max(5, Math.round(secs)), channelId: "rest" },
+    });
+  } catch { /* the in-app vibration still works */ }
+}
+export async function cancelRestAlert() {
+  if (!restId) return;
+  const id = restId; restId = null;
+  try { await Notifications.cancelScheduledNotificationAsync(id); } catch {}
+}

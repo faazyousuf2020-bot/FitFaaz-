@@ -58,7 +58,13 @@ function Track() {
   const gps = status === "walking"
     ? walk.acc == null ? "Finding GPS…" : `GPS ±${Math.round(walk.acc)} m`
     : status === "paused" ? "Paused" : "GPS ready";
-  const recent = [...st.walks].reverse().slice(0, 10);
+  // walks grouped by day, newest first
+  const [daysShown, setDaysShown] = useState(10);
+  const [openDays, setOpenDays] = useState<Set<string>>(new Set());
+  const byDay = new Map<string, WalkT[]>();
+  for (const w of [...st.walks].reverse()) byDay.set(w.date, [...(byDay.get(w.date) ?? []), w]);
+  const dayList = [...byDay.entries()];
+  const toggleDay = (d: string) => setOpenDays((o) => { const n = new Set(o); n.has(d) ? n.delete(d) : n.add(d); return n; });
 
   return (
     <View>
@@ -111,11 +117,30 @@ function Track() {
         <Note style={{ textAlign: "center" }}>Steps are estimated from distance until the step sensor reports.</Note>
       ) : null}
       <H2>Recent walks</H2>
-      {recent.length ? recent.map((x) => (
-        <Row key={x.id} onPress={() => setOpen(x)} title={dMed(x.date)}
-          sub={`${x.start} · ${fmtClock(x.secs)} · ${n0(x.steps)} steps · ${fmtPace(x.secs, x.m)} /km`}
-          right={<Val>{(x.m / 1000).toFixed(2)} km</Val>} />
-      )) : <Empty>No walks yet. Tap Start when you head out.</Empty>}
+      {dayList.length ? dayList.slice(0, daysShown).map(([d, ws]) => {
+        const isOpen = openDays.has(d);
+        const m = sum(ws, (w) => w.m), secs = sum(ws, (w) => w.secs), steps = sum(ws, (w) => w.steps);
+        return (
+          <View key={d} style={{ marginBottom: 6 }}>
+            <Row onPress={() => toggleDay(d)}
+              title={<T w="semibold">{dMed(d)}{d === st.todayISO ? " · Today" : ""}</T>}
+              sub={`${ws.length} walk${ws.length === 1 ? "" : "s"} · ${fmtClock(secs)} · ${n0(steps)} steps · ${n0(sum(ws, (w) => w.kcal))} kcal`}
+              right={<><Val>{(m / 1000).toFixed(2)} km</Val><T c={C.muted} size={16}>{isOpen ? "▾" : "▸"}</T></>} />
+            {isOpen ? ws.map((x) => (
+              <View key={x.id} style={{ marginLeft: 14 }}>
+                <Row onPress={() => setOpen(x)} title={`${x.start} · ${(x.m / 1000).toFixed(2)} km`}
+                  sub={`${fmtClock(x.secs)} · ${n0(x.steps)} steps · ${fmtPace(x.secs, x.m)} /km · ${n0(x.kcal)} kcal`}
+                  right={<T c={C.leaf} size={13} w="semibold">Map</T>} />
+              </View>
+            )) : null}
+          </View>
+        );
+      }) : <Empty>No walks yet. Tap Start when you head out.</Empty>}
+      {dayList.length > daysShown ? (
+        <Pressable onPress={() => setDaysShown(daysShown + 14)} style={{ alignItems: "center", paddingVertical: 10 }}>
+          <T c={C.leaf} w="semibold" size={14}>Show earlier days</T>
+        </Pressable>
+      ) : null}
       <WalkSheet walk={open} onClose={() => setOpen(null)} />
     </View>
   );

@@ -46,12 +46,14 @@ function XLabels({ labels, xAt, maxLabels = 7 }: { labels: string[]; xAt: (i: nu
   );
 }
 
-export function BarChart({ values, labels, colors, line, onTap, fmt = short, faded = [] }: {
+export function BarChart({ values, labels, colors, line, onTap, fmt = short, faded = [], stack, stackColor }: {
   values: number[]; labels: string[]; colors: string[]; line?: number[]; onTap: (i: number) => void;
   fmt?: (v: number) => string; faded?: number[];
+  stack?: number[]; stackColor?: string; // a second series drawn on top of the first
 }) {
   const n = Math.max(1, values.length);
-  const max = niceMax(Math.max(1, ...values, ...(line ?? [])) * 1.08);
+  const tops = values.map((v, i) => v + (stack?.[i] ?? 0));
+  const max = niceMax(Math.max(1, ...tops, ...(line ?? [])) * 1.08);
   const iw = (CW - CL - CR) / n, bw = Math.max(3, Math.min(22, iw * 0.64));
   const y = (v: number) => CT + (CH - CT - CB) * (1 - v / max);
   const xAt = (i: number) => CL + i * iw + iw / 2;
@@ -60,11 +62,16 @@ export function BarChart({ values, labels, colors, line, onTap, fmt = short, fad
       <Axis max={max} fmt={fmt} />
       {values.map((v, i) => {
         const h = CH - CB - y(v);
+        const s2 = stack?.[i] ?? 0;
         return (
           <G key={i} onPress={() => onTap(i)}>
             <Rect x={CL + i * iw} y={CT} width={iw} height={CH - CT - CB} fill="transparent" />
-            <Rect x={xAt(i) - bw / 2} y={y(v)} width={bw} height={Math.max(h, v ? 1.5 : 0)} rx={Math.min(4, bw / 3)}
+            <Rect x={xAt(i) - bw / 2} y={y(v)} width={bw} height={Math.max(h, v ? 1.5 : 0)} rx={s2 ? 0 : Math.min(4, bw / 3)}
               fill={colors[i]} opacity={faded.includes(i) ? 0.45 : 1} />
+            {s2 > 0 ? (
+              <Rect x={xAt(i) - bw / 2} y={y(v + s2)} width={bw} height={Math.max(1.5, y(v) - y(v + s2))} rx={Math.min(4, bw / 3)}
+                fill={stackColor ?? C.turmeric} opacity={faded.includes(i) ? 0.45 : 1} />
+            ) : null}
           </G>
         );
       })}

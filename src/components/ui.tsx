@@ -24,8 +24,8 @@ export const Panel = ({ children, style }: { children: React.ReactNode; style?: 
   <View style={[s.panel, style as ViewStyle]}>{children}</View>
 );
 
-export function Row({ title, sub, right, onPress, left }: {
-  title: React.ReactNode; sub?: string; right?: React.ReactNode; onPress?: () => void; left?: React.ReactNode;
+export function Row({ title, sub, right, onPress, onLongPress, left }: {
+  title: React.ReactNode; sub?: string; right?: React.ReactNode; onPress?: () => void; onLongPress?: () => void; left?: React.ReactNode;
 }) {
   const inner = (
     <>
@@ -39,8 +39,9 @@ export function Row({ title, sub, right, onPress, left }: {
       {right ? <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>{right}</View> : null}
     </>
   );
-  return onPress ? (
-    <Pressable onPress={onPress} style={({ pressed }) => [s.row, pressed && { backgroundColor: "#F2F5F0" }]}>{inner}</Pressable>
+  return onPress || onLongPress ? (
+    <Pressable onPress={onPress} onLongPress={onLongPress} delayLongPress={350}
+      style={({ pressed }) => [s.row, pressed && { backgroundColor: "#F2F5F0" }]}>{inner}</Pressable>
   ) : <View style={s.row}>{inner}</View>;
 }
 
