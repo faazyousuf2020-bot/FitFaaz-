@@ -41,7 +41,7 @@ export function Row({ title, sub, right, onPress, onLongPress, left }: {
   );
   return onPress || onLongPress ? (
     <Pressable onPress={onPress} onLongPress={onLongPress} delayLongPress={350}
-      style={({ pressed }) => [s.row, pressed && { backgroundColor: "#F2F5F0" }]}>{inner}</Pressable>
+      style={({ pressed }) => [s.row, pressed && { backgroundColor: "#F1EADC" }]}>{inner}</Pressable>
   ) : <View style={s.row}>{inner}</View>;
 }
 
@@ -77,7 +77,7 @@ export function Seg<V extends string>({ options, value, onPick }: { options: [V,
         const on = v === value;
         return (
           <Pressable key={v} onPress={() => onPick(v)} style={[s.segBtn, on && s.segOn]}>
-            <T w={on ? "semibold" : "medium"} c={on ? C.ink : C.muted} size={15}>{l}</T>
+            <T w={on ? "semibold" : "medium"} c={on ? C.inkText : C.muted} size={15}>{l}</T>
           </Pressable>
         );
       })}
@@ -112,7 +112,7 @@ export function Field({ value, onChangeText, onSubmit, button, disabled, inputRe
         ref={inputRef}
         value={value}
         onChangeText={onChangeText}
-        placeholderTextColor="#8C9A93"
+        placeholderTextColor="#9A9284"
         onSubmitEditing={() => !disabled && onSubmit?.()}
         returnKeyType="done"
         submitBehavior="submit"
@@ -169,9 +169,9 @@ export const GroupHead = ({ left, right, style }: { left: string; right?: string
     {right ? <T w="semibold" size={14}>{right}</T> : null}
   </View>
 );
-export const Meter = ({ frac, over, height = 10 }: { frac: number; over?: boolean; height?: number }) => (
-  <View style={{ height, borderRadius: height / 2, backgroundColor: C.sunk, overflow: "hidden" }}>
-    <View style={{ width: `${Math.max(0, Math.min(1, frac)) * 100}%`, height: "100%", borderRadius: height / 2, backgroundColor: over ? C.turmeric : C.leaf }} />
+export const Meter = ({ frac, over, height = 10, dark }: { frac: number; over?: boolean; height?: number; dark?: boolean }) => (
+  <View style={{ height, borderRadius: height / 2, backgroundColor: dark ? C.inkTrack : C.sunk, overflow: "hidden" }}>
+    <View style={{ width: `${Math.max(0, Math.min(1, frac)) * 100}%`, height: "100%", borderRadius: height / 2, backgroundColor: over ? C.danger : C.leaf }} />
   </View>
 );
 
@@ -194,7 +194,7 @@ export const SheetLabel = ({ children }: { children: string }) => (
   <T c={C.muted} size={14} style={{ marginTop: 14, marginBottom: 6 }}>{children}</T>
 );
 export const SheetInput = (p: TextInputProps) => (
-  <TextInput placeholderTextColor="#8C9A93" {...p} style={[s.sheetInput, p.style as TextStyle]} />
+  <TextInput placeholderTextColor="#9A9284" {...p} style={[s.sheetInput, p.style as TextStyle]} />
 );
 
 /* ---------- toast ---------- */
@@ -233,7 +233,7 @@ export const s = StyleSheet.create({
   chip: { paddingVertical: 7, paddingHorizontal: 12, borderRadius: 999, backgroundColor: C.sunk },
   seg: { flexDirection: "row", gap: 4, backgroundColor: C.sunk, padding: 4, borderRadius: 14, marginBottom: 14 },
   segBtn: { flex: 1, paddingVertical: 9, borderRadius: 10, alignItems: "center" },
-  segOn: { backgroundColor: C.surface, elevation: 1 },
+  segOn: { backgroundColor: C.ink },
   tile: { flexBasis: "48%", flexGrow: 1, backgroundColor: C.surface, borderRadius: 16, padding: 14, borderWidth: 1, borderColor: C.line },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 },
   field: {

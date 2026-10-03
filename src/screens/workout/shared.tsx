@@ -24,7 +24,7 @@ export const Tags = ({ p }: { p: Exercise }) => (
   <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
     {[p.name, ...woDesc(p), ...(p.sets > 1 && p.reps ? [`${p.sets * p.reps} total`] : [])].map((t, i) => (
       <View key={i} style={{ backgroundColor: C.leafSoft, paddingVertical: 3, paddingHorizontal: 9, borderRadius: 8 }}>
-        <T w="semibold" size={13} c={C.leaf}>{t}</T>
+        <T w="semibold" size={13} c={C.tealText}>{t}</T>
       </View>
     ))}
   </View>
@@ -113,7 +113,7 @@ export function CategoryPicker({ name, onClose }: { name: string | null; onClose
             <Pressable key={c.id} onPress={() => { st.setExerciseCat(name!, c.id); toast(`Moved to ${c.name}`); onClose(); }}
               style={{ flexDirection: "row", justifyContent: "space-between", padding: 14, borderRadius: 12, backgroundColor: c.id === cur ? C.leafSoft : C.bg }}>
               <T w={c.id === cur ? "semibold" : "regular"}>{c.name}</T>
-              {c.id === cur ? <T c={C.leaf} w="semibold">✓</T> : null}
+              {c.id === cur ? <T c={C.tealText} w="semibold">✓</T> : null}
             </Pressable>
           ))}
           <Pressable onPress={() => setNewCat(true)} style={{ padding: 14, borderRadius: 12, borderWidth: 1.5, borderColor: C.line, borderStyle: "dashed" }}>

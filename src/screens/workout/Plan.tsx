@@ -53,7 +53,7 @@ export default function Plan({ go }: { go: (t: string, p?: string) => void }) {
           backgroundColor: isOpen ? C.surface : "transparent", borderRadius: 14, borderWidth: 1, borderColor: isOpen ? C.line : C.line,
         }}>
           <View>
-            <T w="semibold" size={15} c={d === TODAY ? C.leaf : C.ink}>{d === TODAY ? `Today · ${dMed(d)}` : dLong(d)}</T>
+            <T w="semibold" size={15} c={d === TODAY ? C.tealText : C.ink}>{d === TODAY ? `Today · ${dMed(d)}` : dLong(d)}</T>
             <T c={C.muted} size={13}>{summary}</T>
           </View>
           <T c={C.muted} size={18}>{isOpen ? "▾" : "▸"}</T>
@@ -62,7 +62,7 @@ export default function Plan({ go }: { go: (t: string, p?: string) => void }) {
           <View style={{ paddingTop: 8, paddingHorizontal: 2 }}>
             {rest ? <Rest>Rest day</Rest> : list.length ? groupByCat(list).map(([c, items]) => (
               <View key={c}>
-                <T w="semibold" size={12} c={C.leaf} style={{ marginBottom: 6, marginTop: 4, marginHorizontal: 4, textTransform: "uppercase", letterSpacing: 0.6 }}>
+                <T w="semibold" size={12} c={C.tealText} style={{ marginBottom: 6, marginTop: 4, marginHorizontal: 4, textTransform: "uppercase", letterSpacing: 0.6 }}>
                   {c === "walk" ? "Walk" : catName(c === "other" ? null : c)}
                 </T>
                 {items.map((it) => <PlanRow key={it.id} item={it} withLog={false} onGoWalk={() => go("walk", "track")}
@@ -113,7 +113,7 @@ export default function Plan({ go }: { go: (t: string, p?: string) => void }) {
 
       {pastDays.length ? (
         <Pressable onPress={() => setShowPast(!showPast)} style={{ alignItems: "center", paddingVertical: 12 }}>
-          <T c={C.leaf} w="semibold" size={14}>{showPast ? "Hide past days" : `Show past days (${pastDays.length})`}</T>
+          <T c={C.tealText} w="semibold" size={14}>{showPast ? "Hide past days" : `Show past days (${pastDays.length})`}</T>
         </Pressable>
       ) : null}
       <T c={C.muted} size={13} style={{ marginTop: 4, marginHorizontal: 4 }}>Long-press an exercise to change its category.</T>

@@ -8,7 +8,7 @@ import { C } from "../theme";
 import { useWalk } from "../walk";
 
 const ST = {
-  done: { bg: C.leaf, fg: "#fff", mark: "✓", label: "Done", border: undefined },
+  done: { bg: C.leaf, fg: C.ink, mark: "✓", label: "Done", border: undefined },
   part: { bg: C.turmericSoft, fg: C.turmericInk, mark: "½", label: "Partly done", border: undefined },
   miss: { bg: C.dangerSoft, fg: C.danger, mark: "×", label: "Missed", border: undefined },
   todo: { bg: "transparent", fg: C.ink, mark: "", label: "Planned", border: C.line },

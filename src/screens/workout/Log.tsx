@@ -76,7 +76,7 @@ export default function Log() {
       ))}
       {items.length ? catOrder.map((c) => (
         <View key={c}>
-          <T w="semibold" size={13} c={C.leaf} style={{ marginTop: 10, marginBottom: 6, marginHorizontal: 4, textTransform: "uppercase", letterSpacing: 0.6 }}>{catName(c === "other" ? null : c)}</T>
+          <T w="semibold" size={13} c={C.tealText} style={{ marginTop: 10, marginBottom: 6, marginHorizontal: 4, textTransform: "uppercase", letterSpacing: 0.6 }}>{catName(c === "other" ? null : c)}</T>
           {byCat.get(c)!.map((w) => (
             <Row key={w.id} title={w.name} onLongPress={() => setMoving(w.name)}
               sub={`${w.time}${w.active != null ? ` · ${fmtDur(w.active)}` : ` · ~${fmtDur(activeSecs(w))}`}${w.rest ? ` · rest ${fmtDur(w.rest)}` : ""}`}

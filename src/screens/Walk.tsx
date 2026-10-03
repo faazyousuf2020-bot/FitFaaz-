@@ -130,7 +130,7 @@ function Track() {
               <View key={x.id} style={{ marginLeft: 14 }}>
                 <Row onPress={() => setOpen(x)} title={`${x.start} · ${(x.m / 1000).toFixed(2)} km`}
                   sub={`${fmtClock(x.secs)} · ${n0(x.steps)} steps · ${fmtPace(x.secs, x.m)} /km · ${n0(x.kcal)} kcal`}
-                  right={<T c={C.leaf} size={13} w="semibold">Map</T>} />
+                  right={<T c={C.tealText} size={13} w="semibold">Map</T>} />
               </View>
             )) : null}
           </View>
@@ -138,7 +138,7 @@ function Track() {
       }) : <Empty>No walks yet. Tap Start when you head out.</Empty>}
       {dayList.length > daysShown ? (
         <Pressable onPress={() => setDaysShown(daysShown + 14)} style={{ alignItems: "center", paddingVertical: 10 }}>
-          <T c={C.leaf} w="semibold" size={14}>Show earlier days</T>
+          <T c={C.tealText} w="semibold" size={14}>Show earlier days</T>
         </Pressable>
       ) : null}
       <WalkSheet walk={open} onClose={() => setOpen(null)} />

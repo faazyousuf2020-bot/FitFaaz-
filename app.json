@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "backgroundColor": "#EDF1EA",
+    "backgroundColor": "#F6F1E6",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.faaz.fitfaaz"
@@ -15,7 +15,7 @@
       "package": "com.faaz.fitfaaz",
       "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#3F7A56",
+        "backgroundColor": "#121212",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -47,7 +47,7 @@
         {
           "image": "./assets/splash-icon.png",
           "imageWidth": 160,
-          "backgroundColor": "#EDF1EA"
+          "backgroundColor": "#F6F1E6"
         }
       ],
       [
@@ -62,7 +62,7 @@
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#3F7A56"
+          "color": "#00A99D"
         }
       ],
       [

@@ -63,27 +63,27 @@ export default function Today({ go, openProfile }: { go: (tab: string, pane?: st
         </Pressable>
       ) : null}
       <Pressable onPress={() => go("food", "log")}>
-        <Panel style={{ paddingVertical: 22, paddingHorizontal: 20 }}>
-          <T c={C.muted} size={14}>Eaten today</T>
+        <Panel style={{ paddingVertical: 22, paddingHorizontal: 20, backgroundColor: C.ink, borderColor: C.ink }}>
+          <T c={C.inkMuted} size={14}>Eaten today</T>
           <View style={{ flexDirection: "row", alignItems: "baseline", marginTop: 6, marginBottom: 10, flexWrap: "wrap" }}>
-            <T w="bold" size={52} style={{ letterSpacing: -2, lineHeight: 58 }}>{n0(eaten.kcal)}</T>
-            <T w="medium" size={16} c={C.muted} style={{ marginLeft: 8 }}>of ~{n0(maint)} kcal</T>
+            <T w="bold" size={52} c={C.inkText} style={{ letterSpacing: -2, lineHeight: 58 }}>{n0(eaten.kcal)}</T>
+            <T w="medium" size={16} c={C.inkMuted} style={{ marginLeft: 8 }}>of ~{n0(maint)} kcal</T>
           </View>
-          <Meter frac={maint ? eaten.kcal / maint : 0} over={over} />
-          <Note style={{ marginTop: 8 }}>
+          <Meter frac={maint ? eaten.kcal / maint : 0} over={over} dark />
+          <Note style={{ marginTop: 8, color: over ? "#FF6B7F" : C.inkMuted }}>
             {over ? `${n0(eaten.kcal - maint)} kcal above your estimated maintenance today.` : `${n0(maint - eaten.kcal)} kcal below your estimated maintenance so far.`}
             {eaten.kcal === 0 ? ` Tap to log ${mealNow()}.` : ""}
           </Note>
-          <MacroBars p={eaten.p} c={eaten.c} f={eaten.f} targets={st.targets} />
+          <MacroBars p={eaten.p} c={eaten.c} f={eaten.f} targets={st.targets} dark />
         </Panel>
       </Pressable>
       <Grid style={{ marginTop: 8 }}>
         <Tile k="Steps" v={n0(wk.steps)} onPress={() => go("walk", "track")} />
         <Tile k="Walked" v={(wk.m / 1000).toFixed(2)} unit="km" onPress={() => go("walk", "track")} />
         <Split title="Calories burned" total={n0(burned)} unit="kcal" onPress={() => go("workout", "log")}
-          parts={[["Walking", n0(wk.kcal), C.leaf], ["Workout", `${wo.estimated && wo.kcal ? "~" : ""}${n0(wo.kcal)}`, C.turmeric]]} />
+          parts={[["Walking", n0(wk.kcal), C.leaf], ["Workout", `${wo.estimated && wo.kcal ? "~" : ""}${n0(wo.kcal)}`, C.ink]]} />
         <Split title="Active time" total={fmtDur(wk.secs + wo.secs)} onPress={() => go("workout", "log")}
-          parts={[["Walking", fmtDur(wk.secs), C.leaf], ["Workout", `${wo.estimated && wo.secs ? "~" : ""}${fmtDur(wo.secs)}`, C.turmeric]]} />
+          parts={[["Walking", fmtDur(wk.secs), C.leaf], ["Workout", `${wo.estimated && wo.secs ? "~" : ""}${fmtDur(wo.secs)}`, C.ink]]} />
       </Grid>
       {wo.secs > 0 ? (
         <T c={C.muted} size={13} style={{ marginTop: 6, marginHorizontal: 4 }}>

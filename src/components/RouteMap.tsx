@@ -7,8 +7,9 @@ import { LEAFLET_CSS, LEAFLET_JS } from "./leafletAsset";
 const HTML = `<!doctype html><html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <style>${LEAFLET_CSS}
-html,body,#m{height:100%;margin:0;background:#DCE6D8}
-.leaflet-control-attribution{font-size:9px;background:rgba(251,252,249,.75)!important}
+html,body,#m{height:100%;margin:0;background:#E7E0D0}
+.leaflet-control-attribution{font-size:9px;background:rgba(255,252,246,.8)!important}
+.leaflet-tile-pane{filter:sepia(.18) saturate(.85)}
 .leaflet-control-zoom{display:none}
 </style></head><body><div id="m"></div>
 <script>${LEAFLET_JS}</script>
@@ -26,7 +27,7 @@ osm.on('tileerror', function(){
   if (tileErrors === 3) { map.removeLayer(osm); esri.addTo(map); }
 });
 osm.addTo(map);
-var line = L.polyline([], { color: '#3F7A56', weight: 5, lineCap: 'round', lineJoin: 'round' }).addTo(map);
+var line = L.polyline([], { color: '#00A99D', weight: 5, lineCap: 'round', lineJoin: 'round' }).addTo(map);
 var start = null, cur = null, halo = null, userMoved = false, lastN = 0;
 map.on('dragstart', function(){ userMoved = true; });
 window.setRoute = function(pts, follow) {
@@ -37,11 +38,11 @@ window.setRoute = function(pts, follow) {
     return;
   }
   var a = pts[0], b = pts[pts.length - 1];
-  if (!start) start = L.circleMarker(a, { radius: 6, color: '#1D3530', weight: 3, fillColor: '#FBFCF9', fillOpacity: 1 }).addTo(map);
+  if (!start) start = L.circleMarker(a, { radius: 6, color: '#121212', weight: 3, fillColor: '#FFFCF6', fillOpacity: 1 }).addTo(map);
   else start.setLatLng(a);
   if (follow) {
-    if (!halo) halo = L.circleMarker(b, { radius: 14, stroke: false, fillColor: '#E3A21A', fillOpacity: .25 }).addTo(map);
-    if (!cur) cur = L.circleMarker(b, { radius: 7, color: '#FBFCF9', weight: 3, fillColor: '#E3A21A', fillOpacity: 1 }).addTo(map);
+    if (!halo) halo = L.circleMarker(b, { radius: 14, stroke: false, fillColor: '#00C9B8', fillOpacity: .3 }).addTo(map);
+    if (!cur) cur = L.circleMarker(b, { radius: 7, color: '#FFFCF6', weight: 3, fillColor: '#121212', fillOpacity: 1 }).addTo(map);
     halo.setLatLng(b); cur.setLatLng(b);
     if (!userMoved) map.setView(b, Math.max(map.getZoom(), 16), { animate: pts.length !== lastN });
   } else {
@@ -54,7 +55,7 @@ window.setRoute = function(pts, follow) {
 window.recenter = function(){ userMoved = false; };
 var here = null;
 window.showHere = function(lat, lng){
-  if (!here) here = L.circleMarker([lat, lng], { radius: 7, color: '#FBFCF9', weight: 3, fillColor: '#3F7A56', fillOpacity: 1 }).addTo(map);
+  if (!here) here = L.circleMarker([lat, lng], { radius: 7, color: '#FFFCF6', weight: 3, fillColor: '#00A99D', fillOpacity: 1 }).addTo(map);
   else here.setLatLng([lat, lng]);
   map.setView([lat, lng], 16);
 };
@@ -81,7 +82,7 @@ export default function RouteMap({ route, follow, style, recenterKey, here }: {
   }, [recenterKey]);
 
   return (
-    <View style={[{ borderRadius: 22, overflow: "hidden", backgroundColor: "#DCE6D8", borderWidth: 1, borderColor: C.line }, style]}>
+    <View style={[{ borderRadius: 22, overflow: "hidden", backgroundColor: "#E7E0D0", borderWidth: 1, borderColor: C.line }, style]}>
       <WebView
         ref={ref}
         source={source}
@@ -92,7 +93,7 @@ export default function RouteMap({ route, follow, style, recenterKey, here }: {
         overScrollMode="never"
         nestedScrollEnabled
         setBuiltInZoomControls={false}
-        style={{ flex: 1, backgroundColor: "#DCE6D8" }}
+        style={{ flex: 1, backgroundColor: "#E7E0D0" }}
       />
     </View>
   );

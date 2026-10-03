@@ -78,7 +78,7 @@ async function startUpdates() {
     foregroundService: {
       notificationTitle: "FitFaaz is tracking your walk",
       notificationBody: "Open the app to pause or stop.",
-      notificationColor: "#3F7A56",
+      notificationColor: "#00A99D",
       killServiceOnDestroy: false,
     },
   });

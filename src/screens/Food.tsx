@@ -225,7 +225,7 @@ function UnknownItem({ item }: { item: Item }) {
         {results?.map((o) => (
           <Row key={o.name} onPress={() => useOnline(o)} title={o.name}
             sub={`${o.kcal100} kcal / 100 g${o.p != null ? ` · ${macroLine(o)}` : ""}${o.serving_g ? ` · serving ${Math.round(o.serving_g)} g` : ""}`}
-            right={<T w="semibold" c={C.leaf} size={14}>Use</T>} />
+            right={<T w="semibold" c={C.tealText} size={14}>Use</T>} />
         ))}
       </View>
       <View style={{ flexDirection: "row", gap: 8, marginTop: 6, alignItems: "center" }}>
@@ -286,13 +286,13 @@ function Progress() {
           <T c={C.muted} size={13}>{dShort(days[0])} – {dShort(days[days.length - 1])}</T>
         </View>
         <BarChart values={vals} labels={days.map(dNum)} line={target}
-          colors={vals.map((v, i) => color ?? (v <= target[i] ? C.leaf : C.turmeric))} faded={[days.length - 1]}
+          colors={vals.map((v, i) => color ?? (v <= target[i] ? C.leaf : C.danger))} faded={[days.length - 1]}
           onTap={(i) => {
             const t = totals[i];
             setCap(`${dLong(days[i])} · ${n0(t.kcal)} kcal · ${macroLine(t)}${metric === "kcal" ? ` · maintenance ${n0(target[i])}` : ` · target ${n0(target[i])} g`}${days[i] === st.todayISO ? " (today, still going)" : ""}`);
           }} />
         <Legend items={metric === "kcal"
-          ? [[C.leaf, "Below maintenance"], [C.turmeric, "Above"], [C.ink, "Maintenance", true]]
+          ? [[C.leaf, "Below maintenance"], [C.danger, "Above"], [C.ink, "Maintenance", true]]
           : [[color!, NAMES[metric]], [C.ink, "Daily target", true]]} />
         <T c={C.muted} size={14} style={{ marginTop: 8, marginHorizontal: 4 }}>{cap ?? "Tap a bar for that day."}</T>
       </Panel>

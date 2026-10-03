@@ -70,7 +70,7 @@ export function BarChart({ values, labels, colors, line, onTap, fmt = short, fad
               fill={colors[i]} opacity={faded.includes(i) ? 0.45 : 1} />
             {s2 > 0 ? (
               <Rect x={xAt(i) - bw / 2} y={y(v + s2)} width={bw} height={Math.max(1.5, y(v) - y(v + s2))} rx={Math.min(4, bw / 3)}
-                fill={stackColor ?? C.turmeric} opacity={faded.includes(i) ? 0.45 : 1} />
+                fill={stackColor ?? C.ink} opacity={faded.includes(i) ? 0.45 : 1} />
             ) : null}
           </G>
         );
@@ -94,7 +94,7 @@ export function LineChart({ values, labels, onTap, fmt = short, trend }: {
     <Frame>
       <Axis max={max} fmt={fmt} />
       {trend && n > 1 ? (
-        <Line x1={xAt(0)} y1={y(trend[0])} x2={xAt(n - 1)} y2={y(trend[1])} stroke={C.turmeric} strokeWidth={2} strokeDasharray="5 4" />
+        <Line x1={xAt(0)} y1={y(trend[0])} x2={xAt(n - 1)} y2={y(trend[1])} stroke={C.ink} strokeWidth={2} strokeDasharray="5 4" />
       ) : null}
       <Polyline points={values.map((v, i) => `${xAt(i)},${y(v)}`).join(" ")} fill="none" stroke={C.leaf} strokeWidth={2.5} strokeLinejoin="round" />
       {values.map((v, i) => (

@@ -89,17 +89,19 @@ export default function Session({ onFinished }: { onFinished: (r: SessionResult)
 
   return (
     <View>
-      <Panel>
+      <Panel style={{ backgroundColor: C.ink, borderColor: C.ink }}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <View>
-            <T c={C.muted} size={14}>Workout running</T>
-            <T w="bold" size={34} style={{ letterSpacing: -1 }}>{fmtClock(total)}</T>
+            <T c={C.inkMuted} size={14}>Workout running</T>
+            <T w="bold" size={34} c={C.inkText} style={{ letterSpacing: -1 }}>{fmtClock(total)}</T>
           </View>
-          <Btn kind="stop" label="Finish" onPress={stop} />
+          <Pressable onPress={stop} style={{ borderWidth: 1.5, borderColor: C.danger, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 16 }}>
+            <T w="semibold" c="#FF6B7F">Finish</T>
+          </Pressable>
         </View>
         <View style={{ flexDirection: "row", gap: 16, marginTop: 8 }}>
-          <T size={14}><T w="semibold" size={14} c={C.leaf}>Exercise </T>{fmtClock(exercise)}</T>
-          <T size={14}><T w="semibold" size={14} c={C.turmericInk}>Rest </T>{fmtClock(rest)}</T>
+          <T size={14} c={C.inkText}><T w="semibold" size={14} c={C.leaf}>Exercise </T>{fmtClock(exercise)}</T>
+          <T size={14} c={C.inkText}><T w="semibold" size={14} c={C.inkText}>Rest </T>{fmtClock(rest)}</T>
         </View>
       </Panel>
 
@@ -133,10 +135,10 @@ export default function Session({ onFinished }: { onFinished: (r: SessionResult)
           </T>
           {live.setStartedAt ? (
             <>
-              <T w="bold" size={56} c={C.leaf} style={{ letterSpacing: -2, marginTop: 10 }}>{fmtClock(setSecs)}</T>
+              <T w="bold" size={56} c={C.tealText} style={{ letterSpacing: -2, marginTop: 10 }}>{fmtClock(setSecs)}</T>
               <T c={C.muted} size={14}>{timed ? `Holding${planned?.dur ? ` · target ${fmtDur(planned.dur)}` : ""}` : `Set in progress · ${nextReps} reps${nextKg ? ` · ${nextKg} kg` : ""}`}</T>
-              <Pressable onPress={doneSet} style={{ marginTop: 16, width: 150, height: 150, borderRadius: 75, backgroundColor: C.leaf, alignItems: "center", justifyContent: "center" }}>
-                <T w="bold" size={20} c="#fff">Set done</T>
+              <Pressable onPress={doneSet} style={{ marginTop: 16, width: 150, height: 150, borderRadius: 75, backgroundColor: C.ink, alignItems: "center", justifyContent: "center" }}>
+                <T w="bold" size={20} c={C.inkText}>Set done</T>
               </Pressable>
               <Pressable onPress={() => st.setLive({ setStartedAt: null })} style={{ marginTop: 10 }}>
                 <T c={C.muted} size={14}>Cancel this set</T>
@@ -157,7 +159,7 @@ export default function Session({ onFinished }: { onFinished: (r: SessionResult)
           )}
           {st.restAlert.on ? (
             <Pressable onPress={() => setRestPick(true)} style={{ marginTop: 12 }}>
-              <T c={C.leaf} size={13} w="semibold">Rest alert for {cur}: {fmtDur(restTarget)} · change</T>
+              <T c={C.tealText} size={13} w="semibold">Rest alert for {cur}: {fmtDur(restTarget)} · change</T>
             </Pressable>
           ) : null}
         </Panel>

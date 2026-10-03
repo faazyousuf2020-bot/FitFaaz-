@@ -54,11 +54,11 @@ export default function Progress() {
           <View style={{ flexDirection: "row", justifyContent: "space-between", marginHorizontal: 4, marginBottom: 8 }}>
             <T w="semibold">Workout minutes per week</T><T c={C.muted} size={13}>{weeks.length} weeks</T>
           </View>
-          <BarChart values={perWeek.map((w) => w.active)} stack={perWeek.map((w) => w.rest)} stackColor={C.turmeric}
+          <BarChart values={perWeek.map((w) => w.active)} stack={perWeek.map((w) => w.rest)} stackColor={C.ink}
             labels={weeks.map(dShort)} colors={weeks.map(() => C.leaf)} faded={weeks.map((w, i) => (w === thisWs ? i : -1)).filter((i) => i >= 0)}
             fmt={(v) => `${Math.round(v)}`}
             onTap={(i) => setCap(`Week of ${dShort(weeks[i])} · exercise ${Math.round(perWeek[i].active)} min · rest ${Math.round(perWeek[i].rest)} min · ~${Math.round(perWeek[i].kcal)} kcal · ${perWeek[i].days} day${perWeek[i].days === 1 ? "" : "s"}${weeks[i] === thisWs ? " (this week, still going)" : ""}`)} />
-          <Legend items={[[C.leaf, "Exercise"], [C.turmeric, "Rest"]]} />
+          <Legend items={[[C.leaf, "Exercise"], [C.ink, "Rest"]]} />
           <T c={C.muted} size={14} style={{ marginTop: 8, marginHorizontal: 4 }}>{cap ?? "Tap a bar for that week. Untimed sets are estimated."}</T>
         </Panel>
         <Verdict tone={ch == null ? "flat" : ch > 5 ? "up" : ch < -5 ? "down" : "flat"}>
@@ -81,14 +81,14 @@ export default function Progress() {
           <View style={{ flexDirection: "row", justifyContent: "space-between", marginHorizontal: 4, marginBottom: 8 }}>
             <T w="semibold">{catName(cat === "other" ? null : cat)} · exercise minutes</T><T c={C.muted} size={13}>per week</T>
           </View>
-          <BarChart values={vals} labels={weeks.map(dShort)} colors={weeks.map((w) => (w === thisWs ? C.turmeric : C.leaf))} fmt={(v) => `${Math.round(v)}`}
+          <BarChart values={vals} labels={weeks.map(dShort)} colors={weeks.map((w) => (w === thisWs ? C.ink : C.leaf))} fmt={(v) => `${Math.round(v)}`}
             onTap={(i) => setCap(`Week of ${dShort(weeks[i])} · ${Math.round(vals[i])} min of ${catName(cat === "other" ? null : cat).toLowerCase()}`)} />
           <T c={C.muted} size={14} style={{ marginTop: 8, marginHorizontal: 4 }}>{cap ?? "Tap a bar for that week."}</T>
         </Panel>
         <Grid>
           {trends.map(({ n, t }) => (
             <Tile key={n} k={cap1(n)} onPress={() => { setEx(n); setCap(null); }}
-              v={t ? `${t.pct > 0 ? "+" : ""}${t.pct}%` : "–"} vColor={t ? (t.pct > 5 ? C.leaf : t.pct < -5 ? C.danger : undefined) : undefined}
+              v={t ? `${t.pct > 0 ? "+" : ""}${t.pct}%` : "–"} vColor={t ? (t.pct > 5 ? C.tealText : t.pct < -5 ? C.danger : undefined) : undefined}
               sub={t ? (t.pct > 5 ? "Growing" : t.pct < -5 ? "Declining" : "Steady") : "Needs 2+ days"} />
           ))}
         </Grid>
@@ -110,7 +110,7 @@ export default function Progress() {
           </View>
           <LineChart values={vals} labels={byDay.map(dShort)} fmt={M.fmt} trend={linReg(vals)}
             onTap={(i) => setCap(`${dMed(byDay[i])} · ${M.show(vals[i])} · ${rows.filter((r) => r.date === byDay[i]).map((r) => woDesc(r).join(" ")).join(", ")}`)} />
-          <Legend items={[[C.leaf, "Each day"], [C.turmeric, "Trend", true]]} />
+          <Legend items={[[C.leaf, "Each day"], [C.ink, "Trend", true]]} />
           <T c={C.muted} size={14} style={{ marginTop: 8, marginHorizontal: 4 }}>{cap ?? "Tap a point for that day."}</T>
         </Panel>
         {t ? (
@@ -141,7 +141,7 @@ export default function Progress() {
       {body}
       {ex ? (
         <Pressable onPress={() => setMoving(ex)} style={{ marginTop: 12, marginHorizontal: 4 }}>
-          <T c={C.leaf} w="semibold" size={13}>Move "{ex}" to another category</T>
+          <T c={C.tealText} w="semibold" size={13}>Move "{ex}" to another category</T>
         </Pressable>
       ) : null}
       <CategoryPicker name={moving} onClose={() => setMoving(null)} />

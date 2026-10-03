@@ -52,7 +52,7 @@ function Shell() {
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <StatusBar style="dark" />
       <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
-        <T w="bold" size={24} style={{ letterSpacing: -0.5 }}>Fit<T w="bold" size={24} c={C.leaf}>Faaz</T></T>
+        <T w="bold" size={24} style={{ letterSpacing: -0.5 }}>Fit<T w="bold" size={24} c={C.tealText}>Faaz</T></T>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           <T c={C.muted} size={14}>{dMed(st.todayISO)}</T>
           <Pressable onPress={() => setSettings(true)} style={styles.iconBtn} accessibilityLabel="Your details and settings">
@@ -71,9 +71,9 @@ function Shell() {
       </ScrollView>
       <View style={[styles.nav, { paddingBottom: 10 + insets.bottom }]}>
         {(Object.keys(LABEL) as Tab[]).map((t) => {
-          const on = t === tab, c = on ? C.ink : C.muted;
+          const on = t === tab, c = on ? C.ink : C.inkMuted;
           return (
-            <Pressable key={t} onPress={() => go(t)} style={[styles.navBtn, on && { backgroundColor: C.leafSoft }]} accessibilityRole="tab">
+            <Pressable key={t} onPress={() => go(t)} style={[styles.navBtn, on && { backgroundColor: C.turmeric }]} accessibilityRole="tab">
               <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">{ICON[t](c)}</Svg>
               <T size={12} w={on ? "semibold" : "regular"} c={c}>{LABEL[t]}</T>
             </Pressable>
@@ -102,6 +102,6 @@ export default function App() {
 const styles = StyleSheet.create({
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingBottom: 10 },
   iconBtn: { width: 38, height: 38, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: C.surface, borderWidth: 1, borderColor: C.line },
-  nav: { flexDirection: "row", backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.line, paddingTop: 8, paddingHorizontal: 8 },
+  nav: { flexDirection: "row", gap: 4, backgroundColor: C.ink, paddingTop: 10, paddingHorizontal: 10 },
   navBtn: { flex: 1, alignItems: "center", gap: 4, paddingVertical: 6, borderRadius: 14 },
 });
