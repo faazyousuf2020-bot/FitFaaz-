@@ -6,7 +6,7 @@ import { categoryOf, exKey, metOf } from "../../lib/categories";
 import { cancelRestAlert, scheduleRestAlert } from "../../lib/reminders";
 import type { Workout } from "../../lib/types";
 import { fmtClock, fmtDur, n0, sum } from "../../lib/util";
-import { isWalk, woDesc } from "../../lib/workout";
+import { isWalk, planStatus, woDesc } from "../../lib/workout";
 import { useStore } from "../../store";
 import { C } from "../../theme";
 import { ExerciseInput, useCatName, useKnownNames } from "./shared";
@@ -54,7 +54,13 @@ export default function Session({ onFinished }: { onFinished: (r: SessionResult)
     const names = [...planToday.map((p) => p.name), ...known.filter((k) => !isWalk(k))];
     return [...new Map(names.map((n) => [exKey(n), n])).values()].slice(0, 10);
   }, [planToday.length, known.length]);
+  const todayFor = (name: string) => {
+    const rs = st.workouts.filter((w) => w.date === st.todayISO && exKey(w.name) === exKey(name));
+    return { sets: sum(rs, (w) => Math.max(1, w.sets)), secs: sum(rs.filter((w) => w.active != null), (w) => w.active ?? 0) };
+  };
+  const isDone = (p: (typeof planToday)[number]) => planStatus(st.todayISO, p, st.todayISO, st.walks, st.workouts, 0) === "done";
   const planned = cur ? planToday.find((p) => exKey(p.name) === exKey(cur)) : undefined;
+  const nextUp = planToday.find((p) => !isDone(p) && (!cur || exKey(p.name) !== exKey(cur)));
   const curRows = cur ? rows.filter((w) => exKey(w.name) === exKey(cur)) : [];
   const lastEver = cur ? [...st.workouts].reverse().find((w) => exKey(w.name) === exKey(cur)) : undefined;
   const timed = planned ? !planned.reps && planned.dur > 0 : !!lastEver && !lastEver.reps && lastEver.dur > 0;
@@ -105,9 +111,36 @@ export default function Session({ onFinished }: { onFinished: (r: SessionResult)
         </View>
       </Panel>
 
-      <GroupHead left={cur ? "Doing now" : "Pick an exercise"} style={{ marginTop: 18 }} />
+      {planToday.length ? (
+        <>
+          <GroupHead left="Today's plan" right={`${planToday.filter(isDone).length} of ${planToday.length} done`} style={{ marginTop: 18 }} />
+          {planToday.map((p) => {
+            const on = cur && exKey(p.name) === exKey(cur);
+            const { sets, secs } = todayFor(p.name);
+            const done = isDone(p);
+            return (
+              <Pressable key={p.id} onPress={() => pick(p.name)} disabled={!!live.setStartedAt}
+                style={{ flexDirection: "row", alignItems: "center", gap: 10, padding: 12, borderRadius: 14, marginBottom: 6,
+                  backgroundColor: on ? C.ink : C.surface, opacity: live.setStartedAt && !on ? 0.45 : 1 }}>
+                <View style={{ width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center",
+                  backgroundColor: done ? C.leaf : "transparent", borderWidth: done ? 0 : 1.5, borderColor: on ? C.inkMuted : C.line }}>
+                  <T w="bold" size={12} c={C.ink}>{done ? "✓" : ""}</T>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <T w="semibold" c={on ? C.inkText : C.ink}>{p.name}</T>
+                  <T size={13} c={on ? C.inkMuted : C.muted}>
+                    {woDesc(p).join(" ")} · {p.sets ? `${Math.min(sets, p.sets)} of ${p.sets} sets` : `${sets} set${sets === 1 ? "" : "s"}`}{secs ? ` · ${fmtDur(secs)}` : ""}
+                  </T>
+                </View>
+                <T size={13} w="semibold" c={on ? C.leaf : C.tealText}>{on ? "Now" : done ? "" : "Do"}</T>
+              </Pressable>
+            );
+          })}
+        </>
+      ) : null}
+      <GroupHead left={planToday.length ? "Other exercises" : cur ? "Doing now" : "Pick an exercise"} style={{ marginTop: 12 }} />
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
-        {choices.map((n) => {
+        {choices.filter((n) => !planToday.some((p) => exKey(p.name) === exKey(n))).slice(0, 8).map((n) => {
           const on = cur && exKey(n) === exKey(cur);
           return (
             <Pressable key={n} onPress={() => pick(n)} disabled={!!live.setStartedAt}
@@ -126,6 +159,9 @@ export default function Session({ onFinished }: { onFinished: (r: SessionResult)
           onAdd={(e) => pick(e.name)} />
       ) : null}
 
+      {!cur && nextUp ? (
+        <Btn label={`Start with ${nextUp.name}`} onPress={() => pick(nextUp.name)} style={{ marginTop: 4, paddingVertical: 14 }} />
+      ) : null}
       {cur ? (
         <Panel style={{ alignItems: "center", paddingVertical: 22 }}>
           <T w="bold" size={22}>{cur}</T>
@@ -157,6 +193,9 @@ export default function Session({ onFinished }: { onFinished: (r: SessionResult)
               </Pressable>
             </>
           )}
+          {!live.setStartedAt && planned && isDone(planned) && nextUp ? (
+            <Btn kind="dark" label={`Next: ${nextUp.name}`} onPress={() => pick(nextUp.name)} style={{ marginTop: 14 }} />
+          ) : null}
           {st.restAlert.on ? (
             <Pressable onPress={() => setRestPick(true)} style={{ marginTop: 12 }}>
               <T c={C.tealText} size={13} w="semibold">Rest alert for {cur}: {fmtDur(restTarget)} · change</T>

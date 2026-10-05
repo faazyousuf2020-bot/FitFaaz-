@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
 import { MacroBars } from "../components/MacroBars";
-import { Empty, Grid, H2, Meter, Note, Panel, Rest, T, Tile } from "../components/ui";
+import { Btn, Empty, Grid, Meter, Note, Panel, Rest, T, Tile } from "../components/ui";
+import { planStatus } from "../lib/workout";
 import { dayWorkout } from "../lib/burn";
 import { mealNow } from "../lib/food";
 import { foodOn, walkOn } from "../lib/stats";
@@ -100,7 +101,16 @@ export default function Today({ go, openProfile }: { go: (tab: string, pane?: st
           <T w="semibold" c={C.turmericInk}>Workout running · {fmtDur((Date.now() - st.live.startedAt) / 1000)} · tap to open</T>
         </Pressable>
       ) : null}
-      <H2>Today's plan</H2>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 22, marginBottom: 10, marginHorizontal: 4 }}>
+        <T w="semibold" size={17}>Today's plan</T>
+        {!st.live && plan.some((p) => !/^walk/i.test(p.name)) && !st.restDays.has(d) ? (
+          <Btn small label="Start workout" onPress={() => {
+            const first = plan.find((p) => !/^walk/i.test(p.name) && planStatus(d, p, d, st.walks, st.workouts, 0) !== "done");
+            st.startSession(first?.name ?? null);
+            go("workout", "log");
+          }} />
+        ) : null}
+      </View>
       {st.restDays.has(d) ? <Rest>Rest day</Rest>
         : plan.length ? plan.map((it) => <PlanRow key={it.id} item={it} withLog onGoWalk={() => go("walk", "track")} />)
         : <Empty>Nothing planned for today. Plan your week under Workout → Plan.</Empty>}

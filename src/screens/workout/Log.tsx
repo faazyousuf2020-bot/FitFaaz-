@@ -4,10 +4,11 @@ import { Btn, Del, Empty, GroupHead, Note, Panel, Row, T, useToast } from "../..
 import { activeSecs, dayWorkout } from "../../lib/burn";
 import { categoryOf, exKey } from "../../lib/categories";
 import type { Workout } from "../../lib/types";
-import { fmtDur, n0 } from "../../lib/util";
-import { woDesc } from "../../lib/workout";
+import { fmtDur, n0, sum } from "../../lib/util";
+import { isWalk, woDesc } from "../../lib/workout";
 import { useStore } from "../../store";
 import { C } from "../../theme";
+import { usePlanStatus } from "../PlanRows";
 import Session, { SessionResult, SummarySheet } from "./Session";
 import { CategoryPicker, ExerciseInput, useCatName, useKnownNames } from "./shared";
 
@@ -17,6 +18,7 @@ export default function Log() {
   const [moving, setMoving] = useState<string | null>(null);
   const catName = useCatName();
   const known = useKnownNames();
+  const status = usePlanStatus();
 
   if (st.live) return (
     <>
@@ -26,6 +28,8 @@ export default function Log() {
   );
 
   const items = st.workouts.filter((w) => w.date === st.todayISO);
+  const planToday = st.plan.filter((p) => p.date === st.todayISO && !isWalk(p.name));
+  const firstUp = planToday.find((p) => status(st.todayISO, p) !== "done");
   const day = dayWorkout(st.todayISO, st.workouts, st.sessions, st.categories, st.meta, st.profile.weight);
   const sessions = st.sessions.filter((s) => s.date === st.todayISO);
 
@@ -44,8 +48,30 @@ export default function Log() {
           <T c={C.muted} size={14}>No workout running</T>
           <T size={13} c={C.muted} style={{ marginTop: 2 }}>Start one to time each set and your rest</T>
         </View>
-        <Btn label="Start workout" onPress={() => st.startSession()} />
+        <Btn label="Start workout" onPress={() => st.startSession(firstUp?.name ?? null)} />
       </Panel>
+
+      {planToday.length ? (
+        <View style={{ marginTop: 16 }}>
+          <GroupHead left="Today's plan" right={`${planToday.filter((p) => status(st.todayISO, p) === "done").length} of ${planToday.length} done`} style={{ marginTop: 0 }} />
+          {planToday.map((p) => {
+            const done = status(st.todayISO, p) === "done";
+            const secs = sum(items.filter((w) => exKey(w.name) === exKey(p.name) && w.active != null), (w) => w.active ?? 0);
+            return (
+              <Row key={p.id} title={p.name}
+                sub={`${woDesc(p).join(" ")}${done ? " · Done" : ""}${secs ? ` · ${fmtDur(secs)}` : ""}`}
+                left={
+                  <View style={{ width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center",
+                    backgroundColor: done ? C.leaf : "transparent", borderWidth: done ? 0 : 1.5, borderColor: C.line }}>
+                    <T w="bold" size={12}>{done ? "✓" : ""}</T>
+                  </View>
+                }
+                right={done ? undefined : <Btn small label="Start" onPress={() => st.startSession(p.name)} />} />
+            );
+          })}
+          <Note style={{ marginTop: 4 }}>Start times each set and the rest between sets. You can also log without the timer below.</Note>
+        </View>
+      ) : null}
       <View style={{ marginTop: 14 }}>
         <ExerciseInput placeholder="pushups 3x15, plank 60s, curls 3x10 8kg" button="Log" hint="Add reps or time, like pushups 3x15 or plank 60s"
           onAdd={(e) => { st.addWorkout(e); toast(`Logged ${e.name}`); }} />

@@ -166,8 +166,9 @@ function useStoreValue() {
       delWorkout(id: string) { db.runSync("DELETE FROM workouts WHERE id = ?", id); reload(); },
 
       /* ---------- live session ---------- */
-      startSession() {
-        const s: LiveSession = { id: uid(), startedAt: Date.now(), current: null, setStartedAt: null, lastSetEndedAt: null };
+      /** Start timing a workout; optionally with an exercise already picked. */
+      startSession(current: string | null = null) {
+        const s: LiveSession = { id: uid(), startedAt: Date.now(), current, setStartedAt: null, lastSetEndedAt: null };
         setSetting("liveSession", s); reload();
       },
       setLive(patch: Partial<LiveSession>) {
