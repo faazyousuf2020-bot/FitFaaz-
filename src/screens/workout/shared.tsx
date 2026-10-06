@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from "react";
-import { Alert, Pressable, View } from "react-native";
-import { Btn, Chips, Field, Note, Sheet, SheetInput, SheetLabel, T, useToast } from "../../components/ui";
+import { Alert, Pressable, TextInput, View } from "react-native";
+import { Btn, Chips, Note, Sheet, SheetInput, SheetLabel, Stepper, T, useToast } from "../../components/ui";
 import { categoryOf, exKey, INTENSITY } from "../../lib/categories";
 import type { Exercise } from "../../lib/types";
-import { parseWo, validEx, woDesc } from "../../lib/workout";
+import { parseWo, setsRepsText, validEx, woDesc } from "../../lib/workout";
+import { fmtDur } from "../../lib/util";
 import { useStore } from "../../store";
-import { C } from "../../theme";
+import { C, F } from "../../theme";
 
 export function useKnownNames() {
   const st = useStore();
@@ -30,44 +31,120 @@ export const Tags = ({ p }: { p: Exercise }) => (
   </View>
 );
 
-/** Type an exercise; asks once for a category when the exercise isn't recognised. */
-export function ExerciseInput({ placeholder, button, onAdd, hint }: {
-  placeholder: string; button: string; onAdd: (e: Exercise) => void; hint: string;
+/** Pick an exercise and set its sets and reps (or time). Asks once for a category when the exercise isn't recognised. */
+export function ExerciseInput({ button, onAdd }: {
+  placeholder?: string; button: string; onAdd: (e: Exercise) => void; hint?: string;
 }) {
   const st = useStore();
   const known = useKnownNames();
   const catOf = useCatOf();
-  const [text, setText] = useState("");
+  const [name, setName] = useState("");
+  const [mode, setMode] = useState<"reps" | "time">("reps");
+  const [sets, setSets] = useState(3);
+  const [reps, setReps] = useState(10);
+  const [secs, setSecs] = useState(60);
+  const [kg, setKg] = useState("");
   const [newCat, setNewCat] = useState(false);
-  const p = text.trim() ? parseWo(text, known) : null;
-  const ok = !!p && validEx(p);
-  const needsCat = ok && !catOf(p!.name, p!.kg) && !/^walk/i.test(p!.name);
-  const submit = () => { if (p && ok && !needsCat) { onAdd(p); setText(""); } };
+
+  // fill in from what you did last time
+  const prefill = (n: string) => {
+    const last = [...st.workouts, ...st.plan].reverse().find((w) => exKey(w.name) === exKey(n));
+    if (/^walk/i.test(n)) { setMode("time"); setSets(1); setSecs(last?.dur || 1800); return; }
+    if (!last) return;
+    if (!last.reps && last.dur) { setMode("time"); setSecs(last.dur); setSets(Math.max(1, last.sets || 1)); }
+    else { setMode("reps"); setReps(last.reps || 10); if ((last as any).sets > 1 || !(last as any).session_id) setSets(Math.max(1, last.sets || 3)); }
+    if (last.kg) setKg(String(last.kg));
+  };
+  // typing "pushups 3x10" or "plank 60s" fills the boxes too
+  const onName = (t: string) => {
+    if (/\d/.test(t)) {
+      const p = parseWo(t, known);
+      if (p.name && validEx(p)) {
+        setName(p.name);
+        if (p.reps) { setMode("reps"); setReps(p.reps); setSets(Math.max(1, p.sets || 1)); }
+        else if (p.dur) { setMode("time"); setSecs(p.dur); setSets(Math.max(1, p.sets || 1)); }
+        if (p.kg) setKg(String(p.kg));
+        return;
+      }
+    }
+    setName(t);
+  };
+  const clean = name.trim().toLowerCase();
+  const suggestions = clean ? known.filter((k) => k.toLowerCase().startsWith(clean) && k.toLowerCase() !== clean).slice(0, 5)
+    : known.filter((k) => !/^walk/i.test(k)).slice(0, 6);
+  const isWalkName = /^walk/i.test(clean);
+  const ex: Exercise = {
+    name: known.find((k) => exKey(k) === exKey(clean)) ?? clean,
+    sets, reps: mode === "reps" ? reps : 0, dur: mode === "time" ? secs : 0, kg: +kg || 0,
+  };
+  const ok = !!clean;
+  const needsCat = ok && !catOf(ex.name, ex.kg) && !isWalkName;
+  const submit = () => {
+    if (!ok || needsCat) return;
+    onAdd(ex);
+    setName(""); setKg("");
+  };
+  const timeStep = (v: number, dir: 1 | -1) => (isWalkName ? 300 : v + (dir > 0 ? 0 : -1) < 60 ? 5 : 15);
+
   return (
-    <View>
-      <Field value={text} onChangeText={setText} placeholder={placeholder} button={button} disabled={!ok || needsCat} onSubmit={submit}
-        autoCorrect={false} autoCapitalize="none" />
-      <View style={{ minHeight: 22, paddingTop: 8, paddingHorizontal: 6 }}>
-        {p ? ok ? <Tags p={p} /> : <T c={C.muted} size={14}>{hint}</T> : null}
-        {needsCat ? (
-          <View style={{ marginTop: 10 }}>
-            <T size={14} w="semibold">Which category is "{p!.name}"?</T>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-              {st.categories.map((c) => (
-                <Pressable key={c.id} onPress={() => st.setExerciseCat(p!.name, c.id)}
-                  style={{ paddingVertical: 7, paddingHorizontal: 12, borderRadius: 999, backgroundColor: C.ink }}>
-                  <T size={14} c={C.surface}>{c.name}</T>
-                </Pressable>
-              ))}
-              <Pressable onPress={() => setNewCat(true)}
-                style={{ paddingVertical: 7, paddingHorizontal: 12, borderRadius: 999, borderWidth: 1.5, borderColor: C.line }}>
-                <T size={14}>+ New category</T>
-              </Pressable>
-            </View>
-          </View>
-        ) : null}
+    <View style={{ backgroundColor: C.surface, borderRadius: 18, borderWidth: 1, borderColor: C.line, padding: 12 }}>
+      <TextInput value={name} onChangeText={onName} onEndEditing={() => clean && prefill(clean)}
+        placeholder="Exercise, e.g. pushups" placeholderTextColor="#9A9284" autoCorrect={false} autoCapitalize="none"
+        style={{ fontFamily: F.semibold, fontSize: 17, color: C.ink, paddingVertical: 8, paddingHorizontal: 6, borderBottomWidth: 1.5, borderBottomColor: C.line }} />
+      {suggestions.length ? (
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+          {suggestions.map((k) => (
+            <Pressable key={k} onPress={() => { setName(k); prefill(k); }}
+              style={{ paddingVertical: 6, paddingHorizontal: 11, borderRadius: 999, backgroundColor: C.sunk }}>
+              <T size={13}>{k}</T>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+      <View style={{ flexDirection: "row", gap: 6, marginTop: 12 }}>
+        {(["reps", "time"] as const).map((m) => (
+          <Pressable key={m} onPress={() => setMode(m)}
+            style={{ paddingVertical: 6, paddingHorizontal: 14, borderRadius: 999, backgroundColor: mode === m ? C.ink : C.sunk }}>
+            <T size={13} w="semibold" c={mode === m ? C.inkText : C.muted}>{m === "reps" ? "Sets × reps" : "Sets × time"}</T>
+          </Pressable>
+        ))}
       </View>
-      <NewCategorySheet visible={newCat} onClose={() => setNewCat(false)} onCreated={(id) => { if (p) st.setExerciseCat(p.name, id); }} />
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 10 }}>
+        <Stepper label="Sets" value={sets} onChange={setSets} min={1} max={20} />
+        {mode === "reps"
+          ? <Stepper label="Reps per set" value={reps} onChange={setReps} min={1} max={300} />
+          : <Stepper label={isWalkName ? "Time" : "Time per set"} value={secs} onChange={setSecs} min={5} max={4 * 3600} step={timeStep} format={fmtDur} />}
+      </View>
+      {mode === "reps" ? (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 10 }}>
+          <T c={C.muted} size={13}>Weight (optional)</T>
+          <TextInput value={kg} onChangeText={setKg} keyboardType="decimal-pad" placeholder="kg" placeholderTextColor="#9A9284"
+            style={{ width: 80, fontFamily: F.regular, fontSize: 15, color: C.ink, borderWidth: 1.5, borderColor: C.line, borderRadius: 10, paddingVertical: 6, paddingHorizontal: 10, textAlign: "center" }} />
+        </View>
+      ) : null}
+      {needsCat ? (
+        <View style={{ marginTop: 12 }}>
+          <T size={14} w="semibold">Which category is "{ex.name}"?</T>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+            {st.categories.map((c) => (
+              <Pressable key={c.id} onPress={() => st.setExerciseCat(ex.name, c.id)}
+                style={{ paddingVertical: 7, paddingHorizontal: 12, borderRadius: 999, backgroundColor: C.ink }}>
+                <T size={14} c={C.surface}>{c.name}</T>
+              </Pressable>
+            ))}
+            <Pressable onPress={() => setNewCat(true)}
+              style={{ paddingVertical: 7, paddingHorizontal: 12, borderRadius: 999, borderWidth: 1.5, borderColor: C.line }}>
+              <T size={14}>+ New category</T>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
+      <Pressable onPress={submit} disabled={!ok || needsCat}
+        style={({ pressed }) => ({ marginTop: 12, paddingVertical: 14, borderRadius: 14, alignItems: "center",
+          backgroundColor: C.ink, opacity: !ok || needsCat ? 0.35 : pressed ? 0.85 : 1 })}>
+        <T w="semibold" c={C.inkText}>{ok ? `${button} · ${ex.name} · ${setsRepsText(ex)}` : `${button}`}</T>
+      </Pressable>
+      <NewCategorySheet visible={newCat} onClose={() => setNewCat(false)} onCreated={(id) => { if (clean) st.setExerciseCat(ex.name, id); }} />
     </View>
   );
 }

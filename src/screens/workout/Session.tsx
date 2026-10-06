@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Pressable, Vibration, View } from "react-native";
-import { Btn, Chips, GroupHead, Note, Panel, Row, Sheet, SheetInput, SheetLabel, T, useToast } from "../../components/ui";
+import { Btn, Chips, GroupHead, Note, Panel, Row, Sheet, SheetInput, SheetLabel, Stepper, T, useToast } from "../../components/ui";
 import { activeSecs, liveExtra, MAX_REST, restSecs, sessionTotals } from "../../lib/burn";
 import { categoryOf, exKey } from "../../lib/categories";
 import { cancelRestAlert, scheduleRestAlert } from "../../lib/reminders";
 import type { PlanItem, Workout } from "../../lib/types";
 import { fmtClock, fmtDur, n0, sum } from "../../lib/util";
-import { isWalk, woDesc } from "../../lib/workout";
+import { isWalk, setText, setsRepsText, woDesc } from "../../lib/workout";
 import { useStore } from "../../store";
 import { C } from "../../theme";
 import { ExerciseInput, useCatName, useKnownNames } from "./shared";
@@ -21,6 +21,8 @@ export default function Session({ onFinished }: { onFinished: (r: SessionResult)
   const [other, setOther] = useState(false);
   const [editSet, setEditSet] = useState<Workout | null>(null);
   const [restPick, setRestPick] = useState(false);
+  const [repsNow, setRepsNow] = useState<number | null>(null);
+  const [kgNow, setKgNow] = useState<number | null>(null);
   const vibrated = useRef(false);
   const known = useKnownNames();
   const catName = useCatName();
@@ -79,11 +81,13 @@ export default function Session({ onFinished }: { onFinished: (r: SessionResult)
     if (!cur) return;
     cancelRestAlert();
     vibrated.current = false;
+    setRepsNow(null); setKgNow(null);
     st.setLive({ setStartedAt: Date.now() });
   };
   const finishSet = () => {
     if (!cur || !live.setStartedAt) return;
-    st.endSet({ name: cur, sets: 1, reps: timed ? 0 : nextReps, dur: 0, kg: nextKg });
+    st.endSet({ name: cur, sets: 1, reps: timed ? 0 : repsNow ?? nextReps, dur: 0, kg: kgNow ?? nextKg });
+    setRepsNow(null); setKgNow(null);
     const willBeComplete = !!planned && doneSets + 1 >= plannedSets(planned);
     if (st.restAlert.on && !willBeComplete) scheduleRestAlert(restTarget, cur);
     if (willBeComplete) toast(`${cur} done · ${doneSets + 1} sets`);
@@ -156,9 +160,15 @@ export default function Session({ onFinished }: { onFinished: (r: SessionResult)
           <>
             <T w="bold" size={22}>{cur}</T>
             <T c={C.muted} size={14} style={{ marginTop: 2 }}>
-              Set {setLabel} · {timed ? `hold${planned?.dur ? ` ${fmtDur(planned.dur)}` : ""}` : `${nextReps} reps${nextKg ? ` · ${nextKg} kg` : ""}`}
+              Set {setLabel}{planned ? ` · plan ${setsRepsText(planned)}` : ""}{timed && planned?.dur ? ` · hold ${fmtDur(planned.dur)}` : ""}
             </T>
             <T w="bold" size={64} c={C.tealText} style={{ letterSpacing: -2, marginTop: 6 }}>{fmtClock(setSecs)}</T>
+            {!timed ? (
+              <View style={{ flexDirection: "row", gap: 10, alignSelf: "stretch", marginTop: 8 }}>
+                <Stepper label={`Reps in set ${setNo}`} value={repsNow ?? nextReps} onChange={setRepsNow} min={1} max={300} />
+                {(kgNow ?? nextKg) ? <Stepper label="Weight" value={kgNow ?? nextKg} onChange={setKgNow} min={0} max={500} step={(v) => (v < 10 ? 0.5 : 2.5)} format={(v) => `${v} kg`} /> : null}
+              </View>
+            ) : null}
             {bigBtn(`Finish set ${setNo}`, finishSet, true)}
             <Pressable onPress={() => st.setLive({ setStartedAt: null })} style={{ marginTop: 12 }}>
               <T c={C.muted} size={14}>Cancel this set</T>
@@ -168,7 +178,7 @@ export default function Session({ onFinished }: { onFinished: (r: SessionResult)
           <>
             <T w="bold" size={22}>{cur}</T>
             <T c={C.muted} size={14} style={{ marginTop: 2 }}>
-              {catName(categoryOf(cur, st.meta, nextKg))}{planned ? ` · plan ${woDesc(planned).join(" ")}` : ""}
+              {catName(categoryOf(cur, st.meta, nextKg))}{planned ? ` · plan ${setsRepsText(planned)}` : ` · next set ${timed ? "timed" : `${nextReps} reps`}`}
             </T>
             {curRows.length && live.lastSetEndedAt ? (
               <>
@@ -198,7 +208,7 @@ export default function Session({ onFinished }: { onFinished: (r: SessionResult)
       {curRows.length ? (
         <View style={{ marginTop: 10 }}>
           {curRows.map((w, i) => (
-            <Row key={w.id} onPress={() => setEditSet(w)} title={`Set ${i + 1} · ${woDesc(w).join(" · ") || fmtDur(w.dur)}`}
+            <Row key={w.id} onPress={() => setEditSet(w)} title={`Set ${i + 1} · ${setText(w) || fmtDur(w.dur)}`}
               sub={`${w.active != null ? `took ${fmtDur(w.active)}` : "not timed"}${i > 0 && w.rest ? ` · rest before ${fmtDur(Math.min(w.rest, MAX_REST))}` : ""} · tap to change`} />
           ))}
         </View>

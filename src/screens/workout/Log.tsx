@@ -5,7 +5,7 @@ import { activeSecs, dayWorkout, sessionTotals } from "../../lib/burn";
 import { categoryOf, exKey } from "../../lib/categories";
 import type { Workout } from "../../lib/types";
 import { dMed, fmtDur, n0, sum } from "../../lib/util";
-import { isWalk, woDesc } from "../../lib/workout";
+import { isWalk, setText, setsRepsText, woDesc } from "../../lib/workout";
 import { useStore } from "../../store";
 import { C } from "../../theme";
 import { usePlanStatus } from "../PlanRows";
@@ -61,7 +61,7 @@ export default function Log() {
             const secs = sum(items.filter((w) => exKey(w.name) === exKey(p.name) && w.active != null), (w) => w.active ?? 0);
             return (
               <Row key={p.id} title={p.name}
-                sub={`${woDesc(p).join(" ")}${done ? " · Done" : ""}${secs ? ` · ${fmtDur(secs)}` : ""}`}
+                sub={`${setsRepsText(p)}${done ? " · Done" : ""}${secs ? ` · ${fmtDur(secs)}` : ""}`}
                 left={
                   <View style={{ width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center",
                     backgroundColor: done ? C.leaf : "transparent", borderWidth: done ? 0 : 1.5, borderColor: C.line }}>
@@ -75,7 +75,8 @@ export default function Log() {
         </View>
       ) : null}
       <View style={{ marginTop: 14 }}>
-        <ExerciseInput placeholder="pushups 3x15, plank 60s, curls 3x10 8kg" button="Log" hint="Add reps or time, like pushups 3x15 or plank 60s"
+        <T w="semibold" size={15} style={{ marginHorizontal: 4, marginBottom: 6 }}>Log without the timer</T>
+        <ExerciseInput button="Log"
           onAdd={(e) => { st.addWorkout(e); toast(`Logged ${e.name}`); }} />
       </View>
       {!items.length && known.length ? (
@@ -106,15 +107,40 @@ export default function Log() {
       {items.length ? catOrder.map((c) => (
         <View key={c}>
           <T w="semibold" size={13} c={C.tealText} style={{ marginTop: 10, marginBottom: 6, marginHorizontal: 4, textTransform: "uppercase", letterSpacing: 0.6 }}>{catName(c === "other" ? null : c)}</T>
-          {byCat.get(c)!.map((w) => (
-            <Row key={w.id} title={w.name} onLongPress={() => setMoving(w.name)}
-              sub={`${w.time}${w.active != null ? ` · ${fmtDur(w.active)}` : ` · ~${fmtDur(activeSecs(w))}`}${w.rest ? ` · rest ${fmtDur(w.rest)}` : ""}`}
-              right={<><T w="semibold">{woDesc(w).join(" · ")}</T><Del label={`Remove ${w.name}`} onPress={() => { st.delWorkout(w.id); toast("Removed"); }} /></>} />
-          ))}
+          {[...new Map(byCat.get(c)!.map((w) => [exKey(w.name), w.name])).entries()].map(([k, name]) => {
+            const ws = byCat.get(c)!.filter((w) => exKey(w.name) === k);
+            const nSets = sum(ws, (w) => Math.max(1, w.sets || 1));
+            const totalReps = sum(ws, (w) => Math.max(1, w.sets || 1) * (w.reps || 0));
+            const secs = sum(ws, (w) => activeSecs(w)), rst = sum(ws, (w) => (w.active != null ? w.rest ?? 0 : 0));
+            let n = 0;
+            return (
+              <View key={k} style={{ backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.line, padding: 12, marginBottom: 8 }}>
+                <Pressable onLongPress={() => setMoving(name)} style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
+                  <T w="bold" size={17}>{name}</T>
+                  <T w="semibold" c={C.tealText}>{nSets} set{nSets === 1 ? "" : "s"}{totalReps ? ` · ${totalReps} reps` : ""}</T>
+                </Pressable>
+                <T c={C.muted} size={13} style={{ marginTop: 2 }}>
+                  {ws.some((w) => w.active != null) ? "" : "~"}{fmtDur(secs)} exercise{rst ? ` · rest ${fmtDur(rst)}` : ""}
+                </T>
+                {ws.map((w) => {
+                  const from = n + 1; n += Math.max(1, w.sets || 1);
+                  const label = w.sets > 1 ? `Sets ${from}–${n}` : `Set ${from}`;
+                  return (
+                    <View key={w.id} style={{ flexDirection: "row", alignItems: "center", marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: C.line }}>
+                      <T size={14} c={C.muted} style={{ width: 86 }}>{label}</T>
+                      <T size={15} w="semibold" style={{ flex: 1 }}>{w.sets > 1 ? `${w.sets} × ${setText(w)}` : setText(w)}</T>
+                      <T size={13} c={C.muted} style={{ marginRight: 6 }}>{w.time}</T>
+                      <Del label={`Remove ${label} of ${name}`} onPress={() => { st.delWorkout(w.id); toast("Removed"); }} />
+                    </View>
+                  );
+                })}
+              </View>
+            );
+          })}
         </View>
       )) : <Empty>Nothing yet. Start a workout, or log an exercise above.</Empty>}
       {items.length && day.estimated ? <Note>Times marked ~ are estimated from your sets (about 3 seconds a rep and 1 minute of rest between sets). Use Start workout for exact times.</Note> : null}
-      {items.length ? <Note style={{ marginTop: 4 }}>Long-press an exercise to change its category.</Note> : null}
+      {items.length ? <Note style={{ marginTop: 4 }}>Long-press an exercise name to change its category.</Note> : null}
       {items.length || sessions.length ? (
         <Btn kind="stop" small label="Delete today's workouts" style={{ alignSelf: "flex-start", marginTop: 14 }} onPress={() =>
           Alert.alert("Delete today's workouts?", "Every exercise and workout logged today will be deleted. Your plan stays.", [

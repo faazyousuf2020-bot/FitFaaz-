@@ -253,3 +253,31 @@ export const s = StyleSheet.create({
   },
   toast: { position: "absolute", alignSelf: "center", backgroundColor: C.ink, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12 },
 });
+
+/** A number with − and + buttons: "Sets  [−] 3 [+]". */
+export function Stepper({ label, value, onChange, min = 0, max = 999, step = 1, format }: {
+  label: string; value: number; onChange: (v: number) => void; min?: number; max?: number; step?: number | ((v: number, dir: 1 | -1) => number);
+  format?: (v: number) => string;
+}) {
+  const next = (dir: 1 | -1) => {
+    const d = typeof step === "function" ? step(value, dir) : step;
+    onChange(Math.min(max, Math.max(min, value + dir * d)));
+  };
+  const btn = (dir: 1 | -1) => (
+    <Pressable onPress={() => next(dir)} accessibilityLabel={`${dir > 0 ? "More" : "Fewer"} ${label.toLowerCase()}`}
+      style={({ pressed }) => ({ width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center",
+        backgroundColor: pressed ? C.line : C.sunk })}>
+      <T w="bold" size={22}>{dir > 0 ? "+" : "−"}</T>
+    </Pressable>
+  );
+  return (
+    <View style={{ flex: 1, minWidth: 140 }}>
+      <T c={C.muted} size={13} style={{ marginBottom: 4, marginLeft: 2 }}>{label}</T>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: C.surface, borderRadius: 14, borderWidth: 1.5, borderColor: C.line, padding: 4 }}>
+        {btn(-1)}
+        <T w="bold" size={20} style={{ flex: 1, textAlign: "center" }}>{format ? format(value) : value}</T>
+        {btn(1)}
+      </View>
+    </View>
+  );
+}

@@ -30,12 +30,18 @@ export function parseWo(text: string, known: string[]): Exercise {
 }
 export const validEx = (p: Exercise) => !!p.name && (p.reps > 0 || p.dur > 0);
 
-export const woDesc = (w: Exercise) =>
-  [
-    w.reps ? (w.sets > 1 ? `${w.sets}×${w.reps}` : `${w.reps} reps`) : "",
-    w.kg ? `${w.kg} kg` : "",
-    w.dur ? (!w.reps && w.sets > 1 ? `${w.sets}×${fmtDur(w.dur)}` : fmtDur(w.dur)) : "",
-  ].filter(Boolean);
+/** "3 sets × 10 reps", "3 sets × 1 min", "1 set × 12 reps". */
+export const setsRepsText = (w: Exercise) => {
+  const n = Math.max(1, w.sets || 1), S = `${n} set${n === 1 ? "" : "s"}`;
+  if (w.reps) return `${S} × ${w.reps} rep${w.reps === 1 ? "" : "s"}${w.kg ? ` @ ${w.kg} kg` : ""}`;
+  if (w.dur) return isWalk(w.name) ? fmtDur(w.dur) : `${S} × ${fmtDur(w.dur)}`;
+  return S;
+};
+/** Parts for a logged row or plan item, e.g. ["3 sets × 10 reps"]. */
+export const woDesc = (w: Exercise) => [setsRepsText(w)];
+/** One timed set from a workout: "10 reps", "10 reps @ 8 kg", "45s". */
+export const setText = (w: Exercise) =>
+  w.reps ? `${w.reps} rep${w.reps === 1 ? "" : "s"}${w.kg ? ` @ ${w.kg} kg` : ""}` : w.dur ? fmtDur(w.dur) : "";
 
 export type Metric = { label: string; get: (r: Workout) => number; show: (v: number) => string; fmt: (v: number) => string };
 export function exMetric(rows: Workout[]): Metric {
