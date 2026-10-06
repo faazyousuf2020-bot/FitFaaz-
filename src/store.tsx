@@ -165,6 +165,31 @@ function useStoreValue() {
         reload();
       },
       delWorkout(id: string) { db.runSync("DELETE FROM workouts WHERE id = ?", id); reload(); },
+      /** Delete one finished workout and all its sets. */
+      delSession(id: string) {
+        db.withTransactionSync(() => {
+          db.runSync("DELETE FROM workouts WHERE session_id = ?", id);
+          db.runSync("DELETE FROM sessions WHERE id = ?", id);
+        });
+        reload();
+      },
+      /** Delete every workout and exercise logged on a day (and a running workout started that day). */
+      clearWorkoutDay(date: string) {
+        db.withTransactionSync(() => {
+          db.runSync("DELETE FROM workouts WHERE date = ?", date);
+          db.runSync("DELETE FROM sessions WHERE date = ?", date);
+        });
+        const s = getSetting<LiveSession | null>("liveSession", null);
+        if (s) setSetting("liveSession", null);
+        reload();
+      },
+      /** Throw away the running workout without saving it. */
+      discardSession() {
+        const s = getSetting<LiveSession | null>("liveSession", null);
+        if (s) db.runSync("DELETE FROM workouts WHERE session_id = ?", s.id);
+        setSetting("liveSession", null);
+        reload();
+      },
 
       /* ---------- live session ---------- */
       /** Start timing a workout; optionally with an exercise already picked. */

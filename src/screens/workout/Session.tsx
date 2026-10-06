@@ -91,6 +91,10 @@ export default function Session({ onFinished }: { onFinished: (r: SessionResult)
   const endExercise = () => { cancelRestAlert(); st.setLive({ current: null }); };
   const finish = () => Alert.alert("Finish workout?", `Exercise ${fmtDur(exercise)} · rest ${fmtDur(rest)}`, [
     { text: "Keep going", style: "cancel" },
+    { text: "Discard", style: "destructive", onPress: () => Alert.alert("Discard this workout?", "All sets from this workout will be deleted.", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Discard", style: "destructive", onPress: () => { cancelRestAlert(); st.discardSession(); toast("Workout discarded"); } },
+    ]) },
     { text: "Finish", onPress: () => {
       cancelRestAlert();
       const res = st.stopSession();
