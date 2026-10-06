@@ -4,6 +4,7 @@
   "main": "index.ts",
   "dependencies": {
     "@expo-google-fonts/bricolage-grotesque": "^0.4.1",
+    "@expo/metro-runtime": "~56.0.21",
     "expo": "~56.0.23",
     "expo-build-properties": "~56.0.27",
     "expo-camera": "~56.0.8",
@@ -19,14 +20,18 @@
     "expo-status-bar": "~56.0.4",
     "expo-task-manager": "~56.0.27",
     "react": "19.2.3",
+    "react-dom": "19.2.3",
     "react-native": "0.85.3",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-svg": "15.15.4",
+    "react-native-web": "~0.21.0",
     "react-native-webview": "13.16.1"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
     "leaflet": "^1.9.4",
+    "playwright-core": "^1.63.0",
+    "sql.js": "^1.14.2",
     "tsx": "^4.23.15",
     "typescript": "~6.0.3"
   },

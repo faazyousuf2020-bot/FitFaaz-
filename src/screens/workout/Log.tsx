@@ -98,7 +98,7 @@ export default function Log() {
       <GroupHead left="Today" right={items.length || sessions.length ? `${fmtDur(day.secs)} · ~${n0(day.kcal)} kcal` : undefined} style={{ marginTop: 18 }} />
       {sessions.map((s) => (
         <Row key={s.id} title={`Workout ${s.start_ts ? new Date(s.start_ts).toTimeString().slice(0, 5) : ""}`}
-          sub={`${fmtDur(s.secs)} · exercise ${fmtDur(s.active ?? 0)} · rest ${fmtDur(s.rest ?? Math.max(0, s.secs - (s.active ?? 0)))}`} />
+          sub={`exercise ${fmtDur(s.active ?? 0)} · rest ${fmtDur(s.rest ?? 0)}`} />
       ))}
       {items.length ? catOrder.map((c) => (
         <View key={c}>
@@ -110,7 +110,7 @@ export default function Log() {
           ))}
         </View>
       )) : <Empty>Nothing yet. Start a workout, or log an exercise above.</Empty>}
-      {items.length && day.estimated ? <Note>Times marked ~ are estimated from your sets (about 1.5 minutes per set with rest). Use Start workout for exact times.</Note> : null}
+      {items.length && day.estimated ? <Note>Times marked ~ are estimated from your sets (about 3 seconds a rep and 1 minute of rest between sets). Use Start workout for exact times.</Note> : null}
       {items.length ? <Note style={{ marginTop: 4 }}>Long-press an exercise to change its category.</Note> : null}
       <SummarySheet data={summary} onClose={() => setSummary(null)} />
       <CategoryPicker name={moving} onClose={() => setMoving(null)} />

@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { AppState } from "react-native";
+import { activeSecs, restSecs } from "./lib/burn";
 import { exKey } from "./lib/categories";
 import { db, getSetting, setSetting } from "./lib/db";
 import { calcItem, estimateMacros, Item } from "./lib/foodEngine";
@@ -196,11 +197,12 @@ function useStoreValue() {
         const secs = (end - s.startedAt) / 1000;
         const rows = db.getAllSync<Workout>("SELECT * FROM workouts WHERE session_id = ?", s.id);
         if (secs < 10 && !rows.length) { reload(); return null; }
-        const active = rows.reduce((a, w) => a + (w.active ?? 0), 0);
+        const active = rows.reduce((a, w) => a + activeSecs(w), 0);
+        const restTotal = rows.reduce((a, w) => a + restSecs(w), 0);
         const date = new Date(s.startedAt);
         const iso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
         db.runSync("INSERT INTO sessions (id, date, secs, active, rest, start_ts, end_ts) VALUES (?, ?, ?, ?, ?, ?, ?)",
-          s.id, iso, secs, active, Math.max(0, secs - active), s.startedAt, end);
+          s.id, iso, secs, active, restTotal, s.startedAt, end);
         reload();
         return { id: s.id, secs, rows };
       },
