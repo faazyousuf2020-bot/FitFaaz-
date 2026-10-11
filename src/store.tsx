@@ -126,10 +126,10 @@ function useStoreValue() {
       saveRestAlert(r: RestAlert) { setSetting("restAlert", r); reload(); },
 
       /* ---------- food ---------- */
-      addFood(entry: string, v: FoodValues, meal: string) {
+      addFood(entry: string, v: FoodValues, meal: string, date?: string) {
         db.runSync(
           "INSERT INTO food (id, date, time, meal, entry, kcal, src, grams, p, c, f, fib, est) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-          uid(), today(), nowHM(), meal, entry, v.kcal, v.src, v.grams, v.p, v.c, v.f, v.fib, v.est ? 1 : 0,
+          uid(), date || today(), nowHM(), meal, entry, v.kcal, v.src, v.grams, v.p, v.c, v.f, v.fib, v.est ? 1 : 0,
         );
         reload();
       },

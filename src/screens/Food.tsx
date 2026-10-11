@@ -9,7 +9,7 @@ import { MEALS, mealNow, OnlineFood, searchOFF } from "../lib/food";
 import { calcAll, Item, norm, portionText, SIZES } from "../lib/foodEngine";
 import { foodOn } from "../lib/stats";
 import type { Food as FoodT } from "../lib/types";
-import { cap1, dayISO, dLong, dNum, dShort, n0, rangeDays, sum } from "../lib/util";
+import { addDays, cap1, dayISO, dMed, dLong, dNum, dShort, n0, rangeDays, sum } from "../lib/util";
 import { bmr, useStore } from "../store";
 import { C } from "../theme";
 import BarcodeScanner from "./food/BarcodeScanner";
@@ -32,7 +32,9 @@ function Log() {
   const [meal, setMeal] = useState<string | null>(null);
   const [scan, setScan] = useState(false);
   const [editing, setEditing] = useState<FoodT | null>(null);
-  const curMeal = meal ?? mealNow();
+  const [day, setDay] = useState(st.todayISO);
+  const isToday = day === st.todayISO;
+  const curMeal = meal ?? (isToday ? mealNow() : "breakfast");
 
   const items = useMemo(() => (text.trim() ? calcAll(text, st.custom, sizes) : []), [text, st.custom, sizes]);
   const unknown = items.filter((i) => i.how === "unknown");
@@ -42,8 +44,8 @@ function Log() {
   const onText = (t: string) => { setText(t); setSizes({}); };
   const add = () => {
     if (!canAdd) return;
-    for (const it of items) st.addFood(it.raw, it, curMeal);
-    toast(items.length > 1 ? `Added ${items.length} items · ${Math.round(total)} kcal` : `Added · ${Math.round(total)} kcal`);
+    for (const it of items) st.addFood(it.raw, it, curMeal, day);
+    toast(`${items.length > 1 ? `Added ${items.length} items` : "Added"} · ${Math.round(total)} kcal${isToday ? "" : ` to ${dMed(day)}`}`);
     setText(""); setSizes({});
   };
 
@@ -64,11 +66,34 @@ function Log() {
       .slice(0, 8).map((g) => g.last);
   }, [st.food, curMeal]);
 
-  const todays = st.food.filter((f) => f.date === st.todayISO);
-  const tot = foodOn(st.food, st.todayISO);
+  const todays = st.food.filter((f) => f.date === day);
+  const tot = foodOn(st.food, day);
+  const arrow = (dir: -1 | 1) => {
+    const off = dir > 0 && isToday;
+    return (
+      <Pressable disabled={off} onPress={() => { setDay(addDays(day, dir)); setMeal(null); }}
+        accessibilityLabel={dir < 0 ? "Previous day" : "Next day"}
+        style={{ width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: off ? "transparent" : C.sunk }}>
+        <T w="bold" size={20} c={off ? C.line : C.ink}>{dir < 0 ? "‹" : "›"}</T>
+      </Pressable>
+    );
+  };
 
   return (
     <View>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10 }}>
+        {arrow(-1)}
+        <View style={{ flex: 1, alignItems: "center" }}>
+          <T w="semibold" size={16}>{isToday ? "Today" : day === addDays(st.todayISO, -1) ? "Yesterday" : dLong(day)}</T>
+          {!isToday ? <Pressable onPress={() => { setDay(st.todayISO); setMeal(null); }}><T size={13} c={C.tealText} w="semibold">Back to today</T></Pressable> : null}
+        </View>
+        {arrow(1)}
+      </View>
+      {!isToday ? (
+        <View style={{ backgroundColor: C.leafSoft, borderRadius: 12, paddingVertical: 8, paddingHorizontal: 12, marginBottom: 10 }}>
+          <T size={13}>Adding to <T size={13} w="semibold">{dLong(day)}</T>. Tap any entry below to edit it.</T>
+        </View>
+      ) : null}
       <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
         <View style={{ flex: 1 }}>
           <Field value={text} onChangeText={onText} placeholder="2 idli, 1 cup sambar" button="Add"
@@ -104,7 +129,7 @@ function Log() {
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
             {frequent.map((f) => (
               <Pressable key={f.id} onPress={() => {
-                st.addFood(f.entry, { kcal: f.kcal, p: f.p ?? 0, c: f.c ?? 0, f: f.f ?? 0, fib: f.fib ?? 0, grams: f.grams, src: f.src, est: !!f.est }, curMeal);
+                st.addFood(f.entry, { kcal: f.kcal, p: f.p ?? 0, c: f.c ?? 0, f: f.f ?? 0, fib: f.fib ?? 0, grams: f.grams, src: f.src, est: !!f.est }, curMeal, day);
                 toast(`Added · ${Math.round(f.kcal)} kcal`);
               }}
                 style={{ paddingVertical: 7, paddingHorizontal: 12, borderRadius: 999, borderWidth: 1.5, borderColor: C.line, backgroundColor: C.surface }}>
@@ -115,9 +140,9 @@ function Log() {
         </View>
       ) : null}
 
-      <GroupHead left="Today" right={`${n0(tot.kcal)} kcal`} style={{ marginTop: 22 }} />
+      <GroupHead left={isToday ? "Today" : dMed(day)} right={`${n0(tot.kcal)} kcal`} style={{ marginTop: 22 }} />
       {todays.length ? <T c={C.muted} size={13} style={{ marginHorizontal: 4, marginTop: -4, marginBottom: 4 }}>{macroLine(tot)}</T> : null}
-      {!todays.length ? <Empty>Nothing logged today. Type what you ate above, or scan a packet.</Empty> : MEALS.map((ml) => {
+      {!todays.length ? <Empty>{isToday ? "Nothing logged today. Type what you ate above, or scan a packet." : "Nothing logged this day. Type what you ate above to add it."}</Empty> : MEALS.map((ml) => {
         const g = todays.filter((f) => f.meal === ml);
         if (!g.length) return null;
         // identical items in a meal become one row: "Banana 30gm ×3"
@@ -144,7 +169,7 @@ function Log() {
       })}
       {todays.length ? <Note>Tap an entry to change the amount, calories or macros.</Note> : null}
 
-      <BarcodeScanner visible={scan} onClose={() => setScan(false)} meal={curMeal} />
+      <BarcodeScanner visible={scan} onClose={() => setScan(false)} meal={curMeal} date={day} />
       <EditFood entry={editing} onClose={() => setEditing(null)} />
     </View>
   );

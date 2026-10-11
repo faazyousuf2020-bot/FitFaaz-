@@ -11,7 +11,7 @@ import { C } from "../../theme";
 
 type Phase = "scan" | "loading" | "product" | "manual";
 
-export default function BarcodeScanner({ visible, onClose, meal }: { visible: boolean; onClose: () => void; meal: string }) {
+export default function BarcodeScanner({ visible, onClose, meal, date }: { visible: boolean; onClose: () => void; meal: string; date?: string }) {
   const st = useStore(), toast = useToast(), insets = useSafeAreaInsets();
   const [perm, requestPerm] = useCameraPermissions();
   const [phase, setPhase] = useState<Phase>("scan");
@@ -69,7 +69,7 @@ export default function BarcodeScanner({ visible, onClose, meal }: { visible: bo
     });
     const v = vals(p);
     const entry = p.serving_g && Math.abs(g - p.serving_g) < 0.5 ? `1 serving ${name}` : `${Math.round(g)} g ${name}`;
-    st.addFood(entry, { ...v, grams: g, src: "barcode" }, meal);
+    st.addFood(entry, { ...v, grams: g, src: "barcode" }, meal, date);
     toast(`Added · ${Math.round(v.kcal)} kcal`);
     onClose();
   };
